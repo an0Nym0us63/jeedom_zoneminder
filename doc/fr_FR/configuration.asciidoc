@@ -1,0 +1,5 @@
+==== Configuration du plugin
+
+Le plugin ne comporte pas de configuration générale.
+
+Il faut configurer l'adresse et la clef API de XiVo après avoir ajouter un équipement.

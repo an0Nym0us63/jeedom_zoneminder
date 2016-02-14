@@ -1,0 +1,11 @@
+==== XiVo, interface avec une distribution Asterisk
+
+Ce plugin permet l'interconnexion avec une distribution XiVo.
+
+Il permet trois types d'interconnexion :
+
+- Que XiVo puisse appeler Jeedom pour déclencher des actions dans Jeedom sur évènement côté Asterisk
+
+- Que Jeedom puisse appeler XiVo pour déclencher une action
+
+- Que Jeedom puisse récupérer des informations auprès de XiVo
