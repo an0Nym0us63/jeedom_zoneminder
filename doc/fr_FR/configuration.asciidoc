@@ -1,5 +1,9 @@
 ==== Configuration du plugin
 
-Le plugin ne comporte pas de configuration générale.
+Le plugin nécessite de rentre les informations de connexion à Zoneminder
 
-Il faut configurer l'adresse et la clef API de XiVo après avoir ajouter un équipement.
+ - adresse Zoneminder
+
+ - compte à utiliser
+
+ - mot de passe

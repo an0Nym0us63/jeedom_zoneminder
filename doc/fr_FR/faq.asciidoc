@@ -1,5 +1,5 @@
 [panel,primary]
 .Est-ce que le plugin s'appuie sur des API tiers ?
 --
-Non, le plugin pilote XiVo directement
+Non, le plugin pilote Zoneminder directement
 --
