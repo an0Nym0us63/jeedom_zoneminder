@@ -21,14 +21,47 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 
 class zoneminder extends eqLogic {
 
-  public function preUpdate() {
-    if ($this->getConfiguration('addr') == '') {
-      throw new Exception(__('L\'adresse ne peut être vide',__FILE__));
+  public static function cron() {
+    foreach (eqLogic::byType('zoneminder', true) as $zoneminder) {
+      zoneminder::getEvents($zoneminder->getConfiguration('monitorid'));
     }
   }
 
-  public function preSave() {
-    $this->setLogicalId($this->getConfiguration('addr'));
+  public function getSynchro() {
+    $user = config::byKey('user','seneye');
+    $password = config::byKey('password','seneye');
+    $addr = config::byKey('addr','seneye');
+    $uri = $addr . '/zm/api/monitors.json';
+
+    if ($user != '' && $password != '') {
+      $curl = curl_init();
+      $auth = base64_encode($user . ':' . $pass);
+      $header = array("Authorization: Basic $auth");
+      $opts = array( 'http' => array ('method'=>'GET',
+                                                 'header'=>$header));
+      $ctx = stream_context_create($opts);
+      $json_string = file_get_contents($uri,false,$ctx);
+    } else {
+      $json_string = file_get_contents($uri);
+    }
+
+
+
+    $uri = $addr . '/zm/api/monitors/1.json';
+    //log::add('seneye', 'debug', $uri);
+    $json_string = file_get_contents($uri);
+
+  }
+
+  public function getEvents($monitorid) {
+    $user = config::byKey('user','seneye');
+    $password = config::byKey('password','seneye');
+    $addr = config::byKey('addr','seneye');
+
+    $uri = $addr . '/zm/api/events/events/index/MonitorId:' . $monitorid . '.json';
+    //log::add('seneye', 'debug', $uri);
+    $json_string = file_get_contents($uri);
+
   }
 
 
