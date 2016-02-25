@@ -28,9 +28,9 @@ class zoneminder extends eqLogic {
   }
 
   public function getSynchro() {
-    $user = config::byKey('user','seneye');
-    $password = config::byKey('password','seneye');
-    $addr = config::byKey('addr','seneye');
+    $user = config::byKey('user','zoneminder');
+    $password = config::byKey('password','zoneminder');
+    $addr = config::byKey('addr','zoneminder');
     $uri = $addr . '/zm/api/monitors.json';
 
     if ($user != '' && $password != '') {
@@ -44,22 +44,22 @@ class zoneminder extends eqLogic {
     } else {
       $json_string = file_get_contents($uri);
     }
+    log::add('zoneminder', 'debug', 'Retour ' . print_r($json_string,true));
 
 
-
-    $uri = $addr . '/zm/api/monitors/1.json';
-    //log::add('seneye', 'debug', $uri);
+    //$uri = $addr . '/zm/api/monitors/1.json';
+    //log::add('zoneminder', 'debug', $uri);
     $json_string = file_get_contents($uri);
 
   }
 
   public function getEvents($monitorid) {
-    $user = config::byKey('user','seneye');
-    $password = config::byKey('password','seneye');
-    $addr = config::byKey('addr','seneye');
+    $user = config::byKey('user','zoneminder');
+    $password = config::byKey('password','zoneminder');
+    $addr = config::byKey('addr','zoneminder');
 
     $uri = $addr . '/zm/api/events/events/index/MonitorId:' . $monitorid . '.json';
-    //log::add('seneye', 'debug', $uri);
+    //log::add('zoneminder', 'debug', $uri);
     $json_string = file_get_contents($uri);
 
   }
