@@ -24,12 +24,6 @@ $("#bt_addzoneminderAction").on('click', function(event) {
     addCmdToTable(_cmd);
 });
 
-
-/*
-$('#table_cmd tbody').delegate('tr .remove', 'click', function(event) {
-    $(this).closest('tr').remove();
-});*/
-
 $("#table_cmd").delegate(".listEquipementInfo", 'click', function() {
     var el = $(this);
     jeedom.cmd.getSelectModal({cmd: {type: 'info'}}, function(result) {
@@ -65,10 +59,8 @@ function addCmdToTable(_cmd) {
         tr += '<td>';
 			tr += '<input class="cmdAttr form-control input-sm" data-l1key="name" style="width : 140px;" placeholder="{{Nom de l\'info}}"></td>';
         tr += '<td>';
-        tr += '<input class="cmdAttr form-control type input-sm" data-l1key="configuration" value="url" disabled style="margin-bottom : 5px;" />';
 			tr += '<input class="cmdAttr form-control type input-sm" data-l1key="type" value="info" style="display:none;" />';
 			tr += '<span class="subType" subType="' + init(_cmd.subType) + '" style="display:none;"></span>';
-        tr += '</td><td>';
         tr += '<textarea class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="value" style="height : 33px;" ' + disabled + ' placeholder="{{Valeur}}" readonly=true></textarea>';
         tr += '</td><td>';
         tr += '<span><input type="checkbox" data-size="mini" data-label-text="{{Historiser}}" class="cmdAttr bootstrapSwitch" data-l1key="isHistorized" /></span>';
@@ -106,21 +98,10 @@ function addCmdToTable(_cmd) {
         tr += '<div class="col-lg-6">';
         tr += '<input class="cmdAttr form-control input-sm" data-l1key="name">';
         tr += '</div>';
-        tr += '</div>';
-        tr += '<select class="cmdAttr form-control tooltips input-sm" data-l1key="configuration" data-l2key="type" title="{{Est-ce une info en pull depuis zoneminder ou pour commande}}">';
-	    tr += '<option value="pull">Pull</option>';
-	    tr += '<option value="cmd">Commande</option>';
-	    tr += '</select>';
         tr += '</td>';
         tr += '<td>';
-        tr += '<input class="cmdAttr form-control type input-sm" data-l1key="configuration" data-l2key="url" style="margin-bottom : 5px;" />';
         tr += '<input class="cmdAttr form-control type input-sm" data-l1key="type" value="action" style="display:none;"/>';
         tr += '<span class="subType" subType="' + init(_cmd.subType) + '" style="" style="display:none;"></span>';
-        //tr += '<input class="cmdAttr" data-l1key="configuration" data-l2key="virtualAction" value="1" style="display:none;" >';
-        tr += '</td>';
-         tr += '<td>';
-		tr += '<textarea class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="value" style="height : 33px;" ' + disabled + ' disabled placeholder="{{Valeur}}"></textarea>';
-		tr +='</select></span>';
         tr += '</td><td>';
         tr += '<span><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> {{Afficher}}<br/></span>';
         tr += '<span><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="parameters" data-l3key="displayName" checked/> {{Afficher le Nom}}<br/></span>';

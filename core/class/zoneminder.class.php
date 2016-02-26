@@ -21,10 +21,8 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 
 class zoneminder extends eqLogic {
 
-  public static function cron() {
-    foreach (eqLogic::byType('zoneminder', true) as $zoneminder) {
-      zoneminder::getEvents($zoneminder->getConfiguration('monitorid'));
-    }
+  public static function cronHourly() {
+    zoneminder::getSynchro();
   }
 
   public function getSynchro() {
@@ -35,52 +33,162 @@ class zoneminder extends eqLogic {
     if (config::byKey('user','zoneminder') != '' && config::byKey('password','zoneminder') != '') {
       //cookie
       $post = 'username=' . config::byKey('user','zoneminder') . '&password=' . config::byKey('password','zoneminder') . '&action=login&view=console';
+      $loginUrl = $addr . '/index.php';
       $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $addr . '/api/index.php');
+      curl_setopt($ch, CURLOPT_URL, $loginUrl);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+      curl_setopt($ch, CURLOPT_COOKIEJAR, 'zmcookie.txt');
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_COOKIEJAR, '/tmp/zmcookies.txt');
-      curl_setopt($ch, CURLOPT_POST      ,1);
-      curl_setopt($ch, CURLOPT_POSTFIELDS    ,$post);
-      curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,1);
-      curl_setopt($ch, CURLOPT_HEADER      ,0);  // DO NOT RETURN HTTP HEADERS
       $json_string = curl_exec($ch);
-      $info = curl_getinfo($ch);
-      curl_close($ch);
-      log::add('zoneminder', 'debug', 'Retour ' . print_r($json_string,true) . $json_string . $info);
+      $store = curl_exec($ch);
 
-      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_POST, 0);
       curl_setopt($ch, CURLOPT_URL, $uri);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_COOKIEJAR, '/tmp/zmcookies.txt');
-      curl_setopt($ch, CURLOPT_COOKIEFILE, '/tmp/zmcookies.txt');
       $json_string = curl_exec($ch);
-      $info = curl_getinfo($ch);
       curl_close($ch);
     } else {
-      $json_string = file_get_contents($uri);
+      return false;
     }
-    log::add('zoneminder', 'debug', 'Retour ' . print_r($json_string,true) . $json_string);
+    $parsed_json = json_decode($json_string, true);
+    foreach($parsed_json['monitors'] as $monitor) {
+      //log::add('zoneminder', 'debug', 'Retour ' . print_r($monitor,true));
+      log::add('zoneminder', 'debug', 'Retour ' . print_r($monitor['Monitor']['Id'],true));
+      $deviceid = $monitor['Monitor']['Id'];
+      $name = $monitor['Monitor']['Name'];
+      $function = $monitor['Monitor']['Function'];
+      $enabled = $monitor['Monitor']['Enabled'];
+      $width = $monitor['Monitor']['Width'];
+      $height = $monitor['Monitor']['Height'];
+      $type = $monitor['Monitor']['Type'];
+      $zoneminder = self::byLogicalId($deviceid, 'zoneminder');
+      if (!is_object($zoneminder)) {
+        $zoneminder = new zoneminder();
+        $zoneminder->setEqType_name('zoneminder');
+        $zoneminder->setLogicalId($deviceid);
+        $zoneminder->setName($name);
+        $zoneminder->setIsEnable(true);
+        $zoneminder->setConfiguration('deviceid',$deviceid);
+      }
+      $zoneminder->setConfiguration('name',$name);
+      $zoneminder->setConfiguration('function',$function);
+      $zoneminder->setConfiguration('enabled',$enabled);
+      $zoneminder->setConfiguration('width',$width);
+      $zoneminder->setConfiguration('height',$height);
+      $zoneminder->setConfiguration('type',$type);
+      $zoneminder->save();
 
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'activate');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('action');
+        $cmdlogic->setSubType('other');
+        $cmdlogic->setName('Activer');
+        $cmdlogic->setLogicalId('activate');
+        $cmdlogic->setConfiguration('request','Monitor[Enabled]:true');
+        $cmdlogic->save();
+      }
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'unactivate');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('action');
+        $cmdlogic->setSubType('other');
+        $cmdlogic->setName('Désactiver');
+        $cmdlogic->setLogicalId('unactivate');
+        $cmdlogic->setConfiguration('request','Monitor[Enabled]:false');
+        $cmdlogic->save();
+      }
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'active');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('info');
+        $cmdlogic->setName('Activation');
+        $cmdlogic->setLogicalId('active');
+        $cmdlogic->setSubType('binary');
+        $cmdlogic->save();
+      }
+      $cmdlogic->setConfiguration('value', $enabled);
+      $cmdlogic->save();
+      $cmdlogic->event($enabled);
 
-    //$uri = $addr . '/api/monitors/1.json';
-    //log::add('zoneminder', 'debug', $uri);
-    //$json_string = file_get_contents($uri);
-    //http://zoneminder-server-ip/cgi-bin/nph-zms?mode=jpeg&monitor=monitor_id&scale=100&maxfps=10&buffer=1000&user=username&password=password
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'modect');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('action');
+        $cmdlogic->setSubType('other');
+        $cmdlogic->setName('Fonction Détection');
+        $cmdlogic->setLogicalId('modect');
+        $cmdlogic->setConfiguration('request','Monitor[Function]:Modect');
+        $cmdlogic->save();
+      }
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'monitor');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('action');
+        $cmdlogic->setSubType('other');
+        $cmdlogic->setName('Fonction Caméra');
+        $cmdlogic->setLogicalId('monitor');
+        $cmdlogic->setConfiguration('request','Monitor[Function]:Monitor');
+        $cmdlogic->save();
+      }
+      $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'function');
+      if (!is_object($cmdlogic)) {
+        $cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqLogic_id($zoneminder->getId());
+        $cmdlogic->setEqType('zoneminder');
+        $cmdlogic->setType('info');
+        $cmdlogic->setName('Fonction');
+        $cmdlogic->setLogicalId('function');
+        $cmdlogic->setSubType('string');
+        $cmdlogic->save();
+      }
+      $cmdlogic->setConfiguration('value', $function);
+      $cmdlogic->save();
+      $cmdlogic->event($function);
+    }
+  }
+
+  public function syncCamera($monitorid) {
 
   }
 
-  public function getEvents($monitorid) {
-    $user = config::byKey('user','zoneminder');
-    $password = config::byKey('password','zoneminder');
+  public function sendConf($monitorid,$command) {
     $addr = config::byKey('addr','zoneminder');
+    $uri = $addr . '/api/monitors/' . $monitorid . '.json';
+    log::add('zoneminder', 'debug', $uri);
 
-    $uri = $addr . '/api/events/events/index/MonitorId:' . $monitorid . '.json';
-    //log::add('zoneminder', 'debug', $uri);
-    $json_string = file_get_contents($uri);
+    if (config::byKey('user','zoneminder') != '' && config::byKey('password','zoneminder') != '') {
+      //cookie
+      $post = 'username=' . config::byKey('user','zoneminder') . '&password=' . config::byKey('password','zoneminder') . '&action=login&view=console';
+      $loginUrl = $addr . '/index.php';
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $loginUrl);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+      curl_setopt($ch, CURLOPT_COOKIEJAR, 'zmcookie.txt');
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+      $json_string = curl_exec($ch);
+      $store = curl_exec($ch);
+
+      curl_setopt($ch, CURLOPT_URL, $uri);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $command);
+      $json_string = curl_exec($ch);
+      curl_close($ch);
+    } else {
+      return false;
+    }
 
   }
-
-
 }
 
 class zoneminderCmd extends cmd {
@@ -94,36 +202,14 @@ class zoneminderCmd extends cmd {
       break;
       case 'action' :
       $request = $this->getConfiguration('request');
-      switch ($this->getSubType()) {
-        case 'slider':
-        $request = str_replace('#slider#', $value, $request);
-        break;
-        case 'color':
-        $request = str_replace('#color#', $_options['color'], $request);
-        break;
-        case 'message':
-        if ($_options != null)  {
-          $replace = array('#title#', '#message#');
-          $replaceBy = array($_options['title'], $_options['message']);
-          if ( $_options['title'] == '') {
-            throw new Exception(__('Le sujet ne peuvent être vide', __FILE__));
-          }
-          $request = str_replace($replace, $replaceBy, $request);
-
-        }
-        else
-        $request = 1;
-        break;
-        default : $request == null ?  1 : $request;
-      }
 
       $eqLogic = $this->getEqLogic();
-      $LogicalID = $this->getLogicalId();
+      $monitorid = $eqLogic->getConfiguration('monitorid');
 
-      $url = $this->getConfiguration('url');
-      $value = file($url);
+      zoneminder::sendConf($monitorid,$request);
 
-      return $value;
+      return true;
+      break;
     }
     return true;
   }
