@@ -21,7 +21,7 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 
 class zoneminder extends eqLogic {
 
-  public static function cronHourly() {
+  public static function cronDaily() {
     zoneminder::getSynchro();
   }
 
@@ -61,6 +61,8 @@ class zoneminder extends eqLogic {
       $width = $monitor['Monitor']['Width'];
       $height = $monitor['Monitor']['Height'];
       $type = $monitor['Monitor']['Type'];
+      $controlable = $monitor['Monitor']['Controllable'];
+      $controlid = $monitor['Monitor']['ControlId'];
       $zoneminder = self::byLogicalId($deviceid, 'zoneminder');
       if (!is_object($zoneminder)) {
         $zoneminder = new zoneminder();
@@ -76,20 +78,35 @@ class zoneminder extends eqLogic {
       $zoneminder->setConfiguration('width',$width);
       $zoneminder->setConfiguration('height',$height);
       $zoneminder->setConfiguration('type',$type);
+      $zoneminder->setConfiguration('controlable',$controlable);
+      $zoneminder->setConfiguration('controlid',$controlid);
       $zoneminder->save();
 
+      /*$cmd = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'activate');
+  		if (!is_object($cmd)) {
+  			$cmd = new zoneminderCmd();
+  			$cmd->setLogicalId('activate');
+  			$cmd->setIsVisible(1);
+  			$cmd->setName(__('Activer', __FILE__));
+  		}
+  		$cmd->setType('action');
+  		$cmd->setSubType('other');
+      $cmd->setConfiguration('request','Enabled');
+      $cmd->setConfiguration('value','true');
+  		$cmd->setEqLogic_id($zoneminder->getId());
+  		$cmd->save();*/
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'activate');
       if (!is_object($cmdlogic)) {
-        $cmdlogic = new zoneminderCmd();
-        $cmdlogic->setEqLogic_id($zoneminder->getId());
-        $cmdlogic->setEqType('zoneminder');
-        $cmdlogic->setType('action');
-        $cmdlogic->setSubType('other');
-        $cmdlogic->setName('Activer');
-        $cmdlogic->setLogicalId('activate');
-        $cmdlogic->setConfiguration('request','Monitor[Enabled]:true');
-        $cmdlogic->save();
-      }
+  			$cmdlogic = new zoneminderCmd();
+  			$cmdlogic->setLogicalId('activate');
+  			$cmdlogic->setIsVisible(1);
+  			$cmdlogic->setName(__('Activer', __FILE__));
+  		}
+  		$cmdlogic->setType('action');
+  		$cmdlogic->setSubType('other');
+      $cmdlogic->setConfiguration('request','Monitor[Enabled]:true');
+  		$cmdlogic->setEqLogic_id($zoneminder->getId());
+  		$cmdlogic->save();
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'unactivate');
       if (!is_object($cmdlogic)) {
         $cmdlogic = new zoneminderCmd();
@@ -155,11 +172,47 @@ class zoneminder extends eqLogic {
       $cmdlogic->setConfiguration('value', $function);
       $cmdlogic->save();
       $cmdlogic->event($function);
+      
+
+      if (class_exists('camera')) {
+        zoneminder::syncCamera($deviceid);
+      }
     }
   }
 
-  public function syncCamera($monitorid) {
-
+  public function syncCamera($deviceid) {
+    $zoneminder = self::byLogicalId($deviceid, 'zoneminder');
+    $url = config::byKey('addr','zoneminder');
+    $url_parse = parse_url($url);
+    $plugin = plugin::byId('camera');
+		$camera_jeedom = eqLogic::byLogicalId('zoneminder'.$deviceid, 'camera');
+		if (!is_object($camera_jeedom)) {
+			$camera_jeedom = new camera();
+			$camera_jeedom->setDisplay('height', $zoneminder->getConfiguration('height'));
+			$camera_jeedom->setDisplay('width', $zoneminder->getConfiguration('width'));
+		}
+		$camera_jeedom->setName($zoneminder->getName());
+		$camera_jeedom->setIsEnable($zoneminder->getConfiguration('enabled'));
+		$camera_jeedom->setConfiguration('ip', $url_parse['host']);
+		$camera_jeedom->setConfiguration('urlStream', '/zm/cgi-bin/nph-zms?mode=single&monitor=' . $deviceid . '&user=#username#&pass=#password#');
+    $camera_jeedom->setConfiguration('username', config::byKey('user','zoneminder'));
+    $camera_jeedom->setConfiguration('password', config::byKey('password','zoneminder'));
+		$camera_jeedom->setEqType_name('camera');
+		$camera_jeedom->setConfiguration('protocole', $url_parse['scheme']);
+    $camera_jeedom->setConfiguration('device', ' ');
+    $camera_jeedom->setConfiguration('applyDevice', ' ');
+    $port = isset($url_parse['port']) ? ':' . $url_parse['port'] : '';
+    $port = str_replace(':','',$port);
+    if ($port == '') {
+      if ($url_parse['scheme'] == 'https') {
+  			$port = 443;
+  		} else {
+  			$port = 80;
+  		}
+    }
+    $camera_jeedom->setConfiguration('port', $port);
+		$camera_jeedom->setLogicalId('zoneminder'.$deviceid);
+		$camera_jeedom->save();
   }
 
   public function sendConf($monitorid,$command) {

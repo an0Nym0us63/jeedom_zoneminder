@@ -14,16 +14,6 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-$("#bt_addzoneminderInfo").on('click', function(event) {
-    var _cmd = {type: 'info'};
-    addCmdToTable(_cmd);
-});
-
-$("#bt_addzoneminderAction").on('click', function(event) {
-    var _cmd = {type: 'action'};
-    addCmdToTable(_cmd);
-});
-
 $("#table_cmd").delegate(".listEquipementInfo", 'click', function() {
     var el = $(this);
     jeedom.cmd.getSelectModal({cmd: {type: 'info'}}, function(result) {
