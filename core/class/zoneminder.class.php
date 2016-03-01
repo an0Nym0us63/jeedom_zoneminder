@@ -53,7 +53,7 @@ class zoneminder extends eqLogic {
     $parsed_json = json_decode($json_string, true);
     foreach($parsed_json['monitors'] as $monitor) {
       //log::add('zoneminder', 'debug', 'Retour ' . print_r($monitor,true));
-      log::add('zoneminder', 'debug', 'Retour ' . print_r($monitor['Monitor']['Id'],true));
+      //log::add('zoneminder', 'debug', 'Retour ' . print_r($monitor['Monitor']['Id'],true));
       $deviceid = $monitor['Monitor']['Id'];
       $name = $monitor['Monitor']['Name'];
       $function = $monitor['Monitor']['Function'];
@@ -172,7 +172,7 @@ class zoneminder extends eqLogic {
       $cmdlogic->setConfiguration('value', $function);
       $cmdlogic->save();
       $cmdlogic->event($function);
-      
+
 
       if (class_exists('camera')) {
         zoneminder::syncCamera($deviceid);
@@ -241,6 +241,8 @@ class zoneminder extends eqLogic {
       return false;
     }
 
+    zoneminder::getSynchro();
+
   }
 }
 
@@ -257,7 +259,7 @@ class zoneminderCmd extends cmd {
       $request = $this->getConfiguration('request');
 
       $eqLogic = $this->getEqLogic();
-      $monitorid = $eqLogic->getConfiguration('monitorid');
+      $monitorid = $eqLogic->getConfiguration('deviceid');
 
       zoneminder::sendConf($monitorid,$request);
 
