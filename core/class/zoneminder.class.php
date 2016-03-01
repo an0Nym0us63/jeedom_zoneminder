@@ -185,13 +185,13 @@ class zoneminder extends eqLogic {
     $url = config::byKey('addr','zoneminder');
     $url_parse = parse_url($url);
     $plugin = plugin::byId('camera');
-		$camera_jeedom = eqLogic::byLogicalId('zoneminder'.$deviceid, 'camera');
+		$camera_jeedom = eqLogic::byLogicalId('zm'.$deviceid, 'camera');
 		if (!is_object($camera_jeedom)) {
 			$camera_jeedom = new camera();
 			$camera_jeedom->setDisplay('height', $zoneminder->getConfiguration('height'));
 			$camera_jeedom->setDisplay('width', $zoneminder->getConfiguration('width'));
 		}
-		$camera_jeedom->setName($zoneminder->getName());
+		$camera_jeedom->setName('ZM ' . $zoneminder->getName());
 		$camera_jeedom->setIsEnable($zoneminder->getConfiguration('enabled'));
 		$camera_jeedom->setConfiguration('ip', $url_parse['host']);
 		$camera_jeedom->setConfiguration('urlStream', '/zm/cgi-bin/nph-zms?mode=single&monitor=' . $deviceid . '&user=#username#&pass=#password#');
@@ -211,13 +211,13 @@ class zoneminder extends eqLogic {
   		}
     }
     $camera_jeedom->setConfiguration('port', $port);
-		$camera_jeedom->setLogicalId('zoneminder'.$deviceid);
+		$camera_jeedom->setLogicalId('zm'.$deviceid);
 		$camera_jeedom->save();
   }
 
-  public function sendConf($monitorid,$command) {
+  public function sendConf($deviceid,$command) {
     $addr = config::byKey('addr','zoneminder');
-    $uri = $addr . '/api/monitors/' . $monitorid . '.json';
+    $uri = $addr . '/api/monitors/' . $deviceid . '.json';
     log::add('zoneminder', 'debug', $uri);
 
     if (config::byKey('user','zoneminder') != '' && config::byKey('password','zoneminder') != '') {
@@ -259,9 +259,9 @@ class zoneminderCmd extends cmd {
       $request = $this->getConfiguration('request');
 
       $eqLogic = $this->getEqLogic();
-      $monitorid = $eqLogic->getConfiguration('deviceid');
+      $deviceid = $eqLogic->getConfiguration('deviceid');
 
-      zoneminder::sendConf($monitorid,$request);
+      zoneminder::sendConf($deviceid,$request);
 
       return true;
       break;

@@ -170,7 +170,7 @@ $eqLogics = eqLogic::byType('zoneminder');
     </div>
 
     <legend>{{Informations et Commandes}}</legend>
-    
+
     <table id="table_cmd" class="table table-bordered table-condensed">
       <thead>
         <tr>
