@@ -126,7 +126,7 @@ $eqLogics = eqLogic::byType('zoneminder');
       <div id="infoNode" class="col-sm-6">
         <form class="form-horizontal">
           <fieldset>
-            <legend>{{Configuration}}</legend>
+            <legend><i class="fa fa-info-circle"></i>  {{Configuration}}</legend>
 
             <div class="form-group">
               <label class="col-md-2 control-label">{{ID Monitor}}</label>
@@ -169,7 +169,17 @@ $eqLogics = eqLogic::byType('zoneminder');
       </div>
     </div>
 
-    <legend>{{Informations et Commandes}}</legend>
+    <form class="form-horizontal">
+      <fieldset>
+        <div class="form-actions">
+          <a class="btn btn-danger eqLogicAction" data-action="remove"><i class="fa fa-minus-circle"></i> {{Supprimer}}</a>
+          <a class="btn btn-success eqLogicAction" data-action="save"><i class="fa fa-check-circle"></i> {{Sauvegarder}}</a>
+        </div>
+      </fieldset>
+    </form>
+  </br>
+
+    <legend><i class="fa fa-table"></i>  {{Informations et Commandes}}</legend>
 
     <table id="table_cmd" class="table table-bordered table-condensed">
       <thead>
