@@ -2,7 +2,9 @@
 
 Le plugin nécessite de rentre les informations de connexion à Zoneminder
 
- - adresse Zoneminder
+ - adresse Zoneminder (sous la forme http://ipzm, avec le http:// et sans / à la fin)
+
+ - complément d'adresse (sous la /zm, avec le / au début et sans / à la fin, seulement si votre adresse complète zoneminder est par exemple http://ipzm/zm)
 
  - compte à utiliser
 

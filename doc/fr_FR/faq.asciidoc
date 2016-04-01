@@ -3,3 +3,9 @@
 --
 Non, le plugin pilote Zoneminder directement
 --
+
+[panel,primary]
+.Je n'arrive pas à synchroniser correctement ?
+--
+Il faut bien remplir l'adresse sous la forme http://ipzoneminder et remplir le champ complément si votre installation le nécessite (normalement /zm par défaut)
+--
