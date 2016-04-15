@@ -82,43 +82,32 @@ class zoneminder extends eqLogic {
       $zoneminder->setConfiguration('controlid',$controlid);
       $zoneminder->save();
 
-      /*$cmd = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'activate');
-  		if (!is_object($cmd)) {
-  			$cmd = new zoneminderCmd();
-  			$cmd->setLogicalId('activate');
-  			$cmd->setIsVisible(1);
-  			$cmd->setName(__('Activer', __FILE__));
-  		}
-  		$cmd->setType('action');
-  		$cmd->setSubType('other');
-      $cmd->setConfiguration('request','Enabled');
-      $cmd->setConfiguration('value','true');
-  		$cmd->setEqLogic_id($zoneminder->getId());
-  		$cmd->save();*/
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'activate');
       if (!is_object($cmdlogic)) {
   			$cmdlogic = new zoneminderCmd();
+        $cmdlogic->setEqType('zoneminder');
   			$cmdlogic->setLogicalId('activate');
   			$cmdlogic->setIsVisible(1);
   			$cmdlogic->setName(__('Activer', __FILE__));
   		}
   		$cmdlogic->setType('action');
   		$cmdlogic->setSubType('other');
-      $cmdlogic->setConfiguration('request','Monitor[Enabled]:true');
+      $cmdlogic->setConfiguration('request','Monitor[Enabled]=1');
   		$cmdlogic->setEqLogic_id($zoneminder->getId());
   		$cmdlogic->save();
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'unactivate');
       if (!is_object($cmdlogic)) {
         $cmdlogic = new zoneminderCmd();
-        $cmdlogic->setEqLogic_id($zoneminder->getId());
         $cmdlogic->setEqType('zoneminder');
-        $cmdlogic->setType('action');
-        $cmdlogic->setSubType('other');
-        $cmdlogic->setName('Désactiver');
         $cmdlogic->setLogicalId('unactivate');
-        $cmdlogic->setConfiguration('request','Monitor[Enabled]:false');
-        $cmdlogic->save();
+        $cmdlogic->setIsVisible(1);
+        $cmdlogic->setName('Désactiver');
       }
+      $cmdlogic->setType('action');
+  		$cmdlogic->setSubType('other');
+      $cmdlogic->setConfiguration('request','Monitor[Enabled]=0');
+      $cmdlogic->setEqLogic_id($zoneminder->getId());
+      $cmdlogic->save();
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'active');
       if (!is_object($cmdlogic)) {
         $cmdlogic = new zoneminderCmd();
@@ -139,25 +128,27 @@ class zoneminder extends eqLogic {
         $cmdlogic = new zoneminderCmd();
         $cmdlogic->setEqLogic_id($zoneminder->getId());
         $cmdlogic->setEqType('zoneminder');
-        $cmdlogic->setType('action');
-        $cmdlogic->setSubType('other');
         $cmdlogic->setName('Fonction Détection');
         $cmdlogic->setLogicalId('modect');
-        $cmdlogic->setConfiguration('request','Monitor[Function]:Modect');
-        $cmdlogic->save();
       }
+      $cmdlogic->setType('action');
+  		$cmdlogic->setSubType('other');
+      $cmdlogic->setConfiguration('request','Monitor[Function]=Modect');
+      $cmdlogic->setEqLogic_id($zoneminder->getId());
+      $cmdlogic->save();
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'monitor');
       if (!is_object($cmdlogic)) {
         $cmdlogic = new zoneminderCmd();
         $cmdlogic->setEqLogic_id($zoneminder->getId());
         $cmdlogic->setEqType('zoneminder');
-        $cmdlogic->setType('action');
-        $cmdlogic->setSubType('other');
         $cmdlogic->setName('Fonction Caméra');
         $cmdlogic->setLogicalId('monitor');
-        $cmdlogic->setConfiguration('request','Monitor[Function]:Monitor');
-        $cmdlogic->save();
       }
+      $cmdlogic->setType('action');
+  		$cmdlogic->setSubType('other');
+      $cmdlogic->setConfiguration('request','Monitor[Function]=Monitor');
+      $cmdlogic->setEqLogic_id($zoneminder->getId());
+      $cmdlogic->save();
       $cmdlogic = zoneminderCmd::byEqLogicIdAndLogicalId($zoneminder->getId(),'function');
       if (!is_object($cmdlogic)) {
         $cmdlogic = new zoneminderCmd();
@@ -218,7 +209,7 @@ class zoneminder extends eqLogic {
   public function sendConf($deviceid,$command) {
     $addr = config::byKey('addr','zoneminder') . config::byKey('path','zoneminder');
     $uri = $addr . '/api/monitors/' . $deviceid . '.json';
-    log::add('zoneminder', 'debug', $uri);
+    log::add('zoneminder', 'debug', $uri . ' ' . $command);
 
     if (config::byKey('user','zoneminder') != '' && config::byKey('password','zoneminder') != '') {
       //cookie
@@ -236,6 +227,7 @@ class zoneminder extends eqLogic {
       curl_setopt($ch, CURLOPT_URL, $uri);
       curl_setopt($ch, CURLOPT_POSTFIELDS, $command);
       $json_string = curl_exec($ch);
+      log::add('zoneminder', 'debug', $json_string);
       curl_close($ch);
     } else {
       return false;
