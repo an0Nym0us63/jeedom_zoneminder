@@ -1,0 +1,11 @@
+==== Zoneminder, CCTV Open Source
+
+Ce plugin permet l'interconnexion avec un Zoneminder.
+
+Zoneminder est "le" logiciel de CCTV Open Source. Il est présent depuis des années et à peu près seul. Quelques produits sont arrivés avec le Pi par exemple mais se limitent souvent à gérer un fluxion de motion.
+
+Zoneminder permet de connecter un très large panel de camera IP mais aussi d'autres connexions (USB, via CCTV ...)
+
+Une fois les camera ajoutées, on peut configurer différents rôles (motion, monitor ...) et appliquer des zones de détection de mouvement mais aussi avec les travaux de plugins en cours de reconnaissance faciale ou plaques d'immatriculation
+
+Le plugin permet de récupérer les cameras déclarées dans Zoneminder, les déclarer dans le plugin Camera de Jeedom et récupérer les events Zoneminder.
